@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MSS School Billing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- APP CONTAINER -->
+  <div id="app-container" class="app-layout logged-out">
+    
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="login-wrapper">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="logo-placeholder">
+            <span class="material-symbols-outlined">payments</span>
+          </div>
+          <h1>MSS School Billing</h1>
+          <p>Sign in to manage accounts and receipts</p>
+        </div>
+        <form id="login-form">
+          <div class="input-group">
+            <label for="login-username">Username</label>
+            <div class="input-wrapper">
+              <span class="material-symbols-outlined icon">person</span>
+              <input type="text" id="login-username" placeholder="Enter username" required value="admin">
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="login-password">Password</label>
+            <div class="input-wrapper">
+              <span class="material-symbols-outlined icon">lock</span>
+              <input type="password" id="login-password" placeholder="Enter password" required value="admin123">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            <span>Sign In</span>
+            <span class="material-symbols-outlined">login</span>
+          </button>
+          <div id="login-error" class="alert alert-danger" style="display: none;"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MAIN APP LAYOUT (HIDDEN UNTIL LOGGED IN) -->
+    <div id="main-app" class="main-layout" style="display: none;">
+      
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="school-mini-info">
+            <span class="material-symbols-outlined">account_balance</span>
+            <div>
+              <h3 id="sidebar-school-name">MSS School</h3>
+              <p id="sidebar-user-role">Administrator</p>
+            </div>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a href="#" class="nav-item active" data-page="dashboard">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="nav-item" data-page="billing">
+            <span class="material-symbols-outlined">receipt_long</span>
+            <span>Fee Billing</span>
+          </a>
+          <a href="#" class="nav-item" data-page="students">
+            <span class="material-symbols-outlined">group</span>
+            <span>Students</span>
+          </a>
+          <a href="#" class="nav-item" data-page="classes">
+            <span class="material-symbols-outlined">school</span>
+            <span>Classes</span>
+          </a>
+          <a href="#" class="nav-item" data-page="bus">
+            <span class="material-symbols-outlined">directions_bus</span>
+            <span>Transport</span>
+          </a>
+          <a href="#" class="nav-item" data-page="academic-years">
+            <span class="material-symbols-outlined">calendar_today</span>
+            <span>Academic Years</span>
+          </a>
+          <a href="#" class="nav-item" data-page="reports">
+            <span class="material-symbols-outlined">analytics</span>
+            <span>Reports</span>
+          </a>
+          <a href="#" class="nav-item" data-page="sync-queue">
+            <span class="material-symbols-outlined">sync</span>
+            <span>Sync Queue</span>
+          </a>
+          <a href="#" class="nav-item" data-page="settings">
+            <span class="material-symbols-outlined">settings</span>
+            <span>Settings</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <button id="btn-logout" class="btn btn-text">
+            <span class="material-symbols-outlined">logout</span>
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- CONTENT WRAPPER -->
+      <main class="content-container">
+        
+        <!-- HEADER -->
+        <header class="app-header">
+          <div class="header-left">
+            <h2 id="current-page-title">Dashboard</h2>
+          </div>
+          <div class="header-right">
+            <div class="sync-status-indicator" id="header-sync-status">
+              <span class="indicator-dot"></span>
+              <span id="header-sync-text">Sync: Up to date</span>
+            </div>
+            <button id="btn-sync-students" class="btn btn-icon-text btn-outline" title="Pull students &amp; classes from Supabase">
+              <span class="material-symbols-outlined sync-spin-icon">cloud_download</span>
+              <span>Sync Students</span>
+            </button>
+            <button id="btn-sync-fees" class="btn btn-icon-text btn-outline" title="Push pending fees to Supabase">
+              <span class="material-symbols-outlined sync-spin-icon">cloud_upload</span>
+              <span>Sync Fees</span>
+            </button>
+            <button id="btn-toggle-theme" class="btn btn-icon" style="display: none;">
+              <span class="material-symbols-outlined" id="theme-icon">light_mode</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- VIEWS -->
+        <div class="view-content">
+
+          <!-- 1. DASHBOARD VIEW -->
+          <section id="page-dashboard" class="page-view active">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon income">
+                  <span class="material-symbols-outlined">payments</span>
+                </div>
+                <div class="stat-details">
+                  <h3>Today's Collection</h3>
+                  <p class="stat-value" id="stat-todays-collection">₹0.00</p>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon monthly">
+                  <span class="material-symbols-outlined">calendar_month</span>
+                </div>
+                <div class="stat-details">
+                  <h3>Monthly Collection</h3>
+                  <p class="stat-value" id="stat-monthly-collection">₹0.00</p>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon pending">
+                  <span class="material-symbols-outlined">hourglass_empty</span>
+                </div>
+                <div class="stat-details">
+                  <h3>Pending Fees</h3>
+                  <p class="stat-value" id="stat-pending-fees">₹0.00</p>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon sync">
+                  <span class="material-symbols-outlined">sync_problem</span>
+                </div>
+                <div class="stat-details">
+                  <h3>Pending Sync</h3>
+                  <p class="stat-value" id="stat-pending-sync">0</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-details-row">
+              <div class="dashboard-panel panel-left">
+                <h2>Quick Student Search</h2>
+                <div class="search-bar">
+                  <span class="material-symbols-outlined">search</span>
+                  <input type="text" id="dash-student-search" placeholder="Type Student Name, Admission No, Phone...">
+                </div>
+                <div class="dashboard-table-wrapper">
+                  <table class="data-table" id="dash-search-results">
+                    <thead>
+                      <tr>
+                        <th>Admission No</th>
+                        <th>Name</th>
+                        <th>Class</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colspan="5" class="text-center text-muted">Type above to search students...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="dashboard-panel panel-right">
+                <h2>System Overview</h2>
+                <div class="system-status-list">
+                  <div class="status-item">
+                    <span>Active Academic Year</span>
+                    <strong id="stat-active-ay">Loading...</strong>
+                  </div>
+                  <div class="status-item">
+                    <span>Total Students</span>
+                    <strong id="stat-total-students">Loading...</strong>
+                  </div>
+                  <div class="status-item">
+                    <span>Last Synced Time</span>
+                    <strong id="stat-last-sync-time">Loading...</strong>
+                  </div>
+                </div>
+                <div class="quick-actions">
+                  <h3>Quick Tools</h3>
+                  <div class="quick-actions-grid">
+                    <button class="btn btn-outline" onclick="app.navigateToPage('billing')">
+                      <span class="material-symbols-outlined">receipt</span> New Bill
+                    </button>
+                    <button class="btn btn-outline" onclick="app.navigateToPage('students')">
+                      <span class="material-symbols-outlined">group</span> View Students
+                    </button>
+                    <button class="btn btn-outline" onclick="app.navigateToPage('reports')">
+                      <span class="material-symbols-outlined">download</span> Daily Report
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. BILLING VIEW -->
+          <section id="page-billing" class="page-view">
+            <div class="billing-container">
+              <div class="billing-left-panel">
+                <div class="panel-card">
+                  <h2>Select Student</h2>
+                  <div class="search-bar-dropdown">
+                    <div class="search-bar">
+                      <span class="material-symbols-outlined">search</span>
+                      <input type="text" id="billing-student-search" placeholder="Search student by name/admission no...">
+                    </div>
+                    <div class="dropdown-results" id="billing-student-dropdown-results" style="display: none;"></div>
+                  </div>
+
+                   <div id="billing-selected-student-card" class="selected-student-summary" style="display: none;">
+                    <h3>Student Details</h3>
+                    <div class="student-details-grid">
+                      <div><span>Name:</span> <strong id="bill-student-name">-</strong></div>
+                      <div><span>Admission No:</span> <strong id="bill-student-adm">-</strong></div>
+                      <div><span>Class:</span> <strong id="bill-student-class">-</strong></div>
+                      <div><span>Transport Stop:</span> <strong id="bill-student-bus">-</strong></div>
+                      <div><span>Pending Fee:</span> <strong id="bill-student-pending" style="color: #ff4d4d;">-</strong></div>
+                    </div>
+                    <div style="margin-top: 12px; display: flex; gap: 8px;">
+                      <button id="bill-student-whatsapp-btn" class="btn" style="background-color: #25d366; color: white; border: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-weight: 6px; border-radius: 4px; cursor: pointer;">
+                        <svg style="width: 16px; height: 16px; fill: white;" viewBox="0 0 24 24">
+                          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.625 1.451 5.403.002 9.803-4.394 9.806-9.8.001-2.605-1.012-5.054-2.85-6.895C16.39 2.069 13.938 1.056 11.3 1.056c-5.4.001-9.799 4.399-9.802 9.8-.001 1.583.435 3.125 1.265 4.502l-.993 3.626 3.725-.976zm10.992-6.84c-.27-.135-1.597-.788-1.845-.877-.249-.09-.43-.135-.61.135-.18.27-.697.877-.855 1.057-.158.18-.315.202-.586.067-1.244-.622-2.148-1.085-3.007-2.553-.228-.393.228-.365.652-1.213.075-.15.037-.281-.019-.393-.056-.113-.43-1.037-.59-1.428-.155-.373-.326-.322-.445-.327-.116-.005-.248-.006-.38-.006-.133 0-.348.05-.53.249-.182.198-.697.681-.697 1.66s.712 1.925.811 2.06c.099.135 1.401 2.14 3.393 3.001.474.205.845.328 1.134.42.477.152.911.13 1.254.079.382-.057 1.597-.653 1.822-1.284.225-.631.225-1.171.157-1.284-.067-.113-.249-.202-.519-.337z"/>
+                        </svg>
+                        Send WhatsApp Reminder
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel-card mt-2">
+                  <h2>Generate / Edit Bill</h2>
+                  <div class="bill-generation-form">
+                    <div class="fee-form-row">
+                      <div class="input-group">
+                        <label>Tuition Fee (₹) <small class="text-muted">(monthly)</small></label>
+                        <input type="number" id="bill-input-tuition" value="0" min="0" step="0.01">
+                      </div>
+                      <div class="input-group">
+                        <label>Admission Fee (₹)</label>
+                        <input type="number" id="bill-input-admission" value="0" min="0" step="0.01">
+                      </div>
+                      <div class="input-group">
+                        <label>Book Fee (₹)</label>
+                        <input type="number" id="bill-input-book" value="0" min="0" step="0.01">
+                      </div>
+                    </div>
+
+                    <div class="fee-form-row">
+                      <div class="input-group">
+                        <label>Uniform Fee (₹)</label>
+                        <input type="number" id="bill-input-uniform" value="0" min="0" step="0.01">
+                      </div>
+                      <div class="input-group">
+                        <label>Previous Balance (₹)</label>
+                        <input type="number" id="bill-input-prev-bal" value="0" min="0" step="0.01">
+                      </div>
+                      <div class="input-group">
+                        <label>Discount (₹)</label>
+                        <input type="number" id="bill-input-discount" value="0" min="0" step="0.01">
+                      </div>
+                    </div>
+
+                    <!-- BUS SECTION: only shown for bus students -->
+                    <div id="bill-bus-section" style="display:none; border: 1px solid var(--accent); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: rgba(99,102,241,0.05);">
+                      <h3 style="margin: 0 0 10px 0; font-size: 13px; color: var(--accent); display:flex; align-items:center; gap:6px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">directions_bus</span> Bus Transport
+                      </h3>
+                      <div class="fee-form-row">
+                        <div class="input-group">
+                          <label>Assign Bus Stop</label>
+                          <select id="bill-bus-stop-select">
+                            <option value="">-- No Bus / Walking --</option>
+                          </select>
+                        </div>
+                        <div class="input-group">
+                          <label>Bus Type</label>
+                          <select id="bill-bus-type-select">
+                            <option value="both">Both (Morning &amp; Evening)</option>
+                            <option value="morning">Morning Only</option>
+                            <option value="evening">Evening Only</option>
+                          </select>
+                        </div>
+                        <div class="input-group">
+                          <label>Monthly Bus Charge (₹) <small class="text-muted">(per month used)</small></label>
+                          <input type="number" id="bill-input-bus" value="0" min="0" step="0.01" readonly>
+                        </div>
+                      </div>
+                      <p class="text-muted" style="font-size:12px; margin:4px 0 0 0;">Bus fee is charged only for months the student actually uses the bus. Toggle per-month in the tracker below.</p>
+                    </div>
+                    <div id="bill-bus-enable-btn-wrapper" style="margin-bottom:12px; display:none;">
+                      <button type="button" class="btn btn-outline btn-xs" id="btn-enable-bus-section">
+                        <span class="material-symbols-outlined">directions_bus</span> Enable Bus Transport for this Student
+                      </button>
+                    </div>
+
+                    <div class="extra-fees-section">
+                      <h3>Extra / Custom Fees</h3>
+                      <div id="extra-fees-list" class="extra-fees-list"></div>
+                      <button type="button" class="btn btn-outline btn-xs" id="btn-add-extra-fee-row">
+                        <span class="material-symbols-outlined">add</span> Add Custom Fee Item
+                      </button>
+                    </div>
+
+                    <div class="bill-totals mt-2">
+                      <div class="total-row"><span>Total Fees:</span> <strong id="bill-calculated-total">₹0.00</strong></div>
+                      <div class="total-row text-success"><span>Amount Paid:</span> <strong id="bill-calculated-paid">₹0.00</strong></div>
+                      <div class="total-row text-danger"><span>Remaining Balance:</span> <strong id="bill-calculated-balance">₹0.00</strong></div>
+                    </div>
+
+                    <div class="form-actions mt-2">
+                      <button class="btn btn-primary" id="btn-save-bill" disabled>
+                        <span class="material-symbols-outlined">save</span> Save Bill Structure
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- MONTHLY TUITION & BUS TRACKER CARD -->
+                <div class="panel-card mt-2" id="monthly-tracker-card" style="display: none;">
+                  <h2>Monthly Tuition &amp; Bus Fee Tracker</h2>
+                  <p class="text-muted text-sm mb-1">Track monthly installments and toggle student's monthly bus usage.</p>
+                  <div class="table-card mt-1" style="overflow-x: auto;">
+                    <table class="monthly-tracker-table">
+                      <thead>
+                        <tr>
+                          <th>Month</th>
+                          <th>Tuition Fee</th>
+                          <th>Tuition Status</th>
+                          <th>Bus Usage / Fee</th>
+                          <th>Bus Status</th>
+                        </tr>
+                      </thead>
+                      <tbody id="monthly-tracker-tbody">
+                        <!-- Loaded dynamically via JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RECORD PAYMENT SIDEBAR -->
+              <div class="billing-right-panel">
+                <div class="panel-card payment-card">
+                  <h2>Record Payment</h2>
+                  <div class="payment-form">
+                    <div class="input-group">
+                      <label>Amount (₹)</label>
+                      <input type="number" id="pay-input-amount" placeholder="Enter amount to pay" min="0.01" step="0.01" required>
+                    </div>
+
+                    <!-- Payment Allocation Breakdown -->
+                    <div class="allocation-breakdown-box">
+                      <div class="allocation-breakdown-header">
+                        <span class="material-symbols-outlined" style="font-size:14px;">account_balance_wallet</span>
+                        <strong>Payment Allocation</strong>
+                        <small style="opacity:0.65; margin-left:4px;">(auto-computed, editable)</small>
+                      </div>
+                      <div class="allocation-grid">
+                        <div class="alloc-row">
+                          <label>Admission Fee (₹)</label>
+                          <input type="number" id="pay-alloc-admission" value="0" min="0" step="0.01">
+                        </div>
+                        <div class="alloc-row">
+                          <label>Book / Uniform / Other (₹)</label>
+                          <input type="number" id="pay-alloc-other" value="0" min="0" step="0.01">
+                        </div>
+                        <div class="alloc-row">
+                          <label>Tuition Fee (₹)</label>
+                          <input type="number" id="pay-alloc-tuition" value="0" min="0" step="0.01">
+                        </div>
+                        <div class="alloc-row">
+                          <label>Bus Fee (₹)</label>
+                          <input type="number" id="pay-alloc-bus" value="0" min="0" step="0.01">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="input-group">
+                      <label>Payment Mode</label>
+                      <select id="pay-input-mode">
+                        <option value="cash">Cash</option>
+                        <option value="online">Online Transfer / UPI</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="dd">Demand Draft</option>
+                      </select>
+                    </div>
+                    <div class="input-group">
+                      <label>Payment Date</label>
+                      <input type="date" id="pay-input-date" required>
+                    </div>
+                    <div class="input-group">
+                      <label>Notes / Reference No</label>
+                      <input type="text" id="pay-input-notes" placeholder="UPI Reference, Cheque No etc.">
+                    </div>
+                    <button class="btn btn-success btn-block" id="btn-record-payment" disabled>
+                      <span class="material-symbols-outlined">check_circle</span>
+                      <span>Record Payment & Print</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="panel-card mt-2">
+                  <h2>Recent Receipts</h2>
+                  <div class="receipts-list-mini" id="recent-receipts-container">
+                    <div class="text-muted text-center py-2">No recent payments recorded.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. STUDENTS VIEW -->
+          <section id="page-students" class="page-view">
+            <div class="action-header">
+              <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; width: 100%;">
+                <div class="search-bar" style="flex: 1; min-width: 250px;">
+                  <span class="material-symbols-outlined">search</span>
+                  <input type="text" id="students-search-input" placeholder="Search by name, admission no, class...">
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <label style="font-weight: 500; font-size: 14px; color: #94a3b8; white-space: nowrap;">Dues Status:</label>
+                  <select id="students-dues-filter" style="background-color: #141c2f; color: #f3f4f6; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-size: 14px;">
+                    <option value="all">All Students</option>
+                    <option value="unpaid-any">Any Outstanding Dues</option>
+                    <option value="unpaid-past">Unpaid (Up to Previous Months)</option>
+                    <option value="unpaid-current">Unpaid (This Month)</option>
+                  </select>
+                </div>
+                <button class="btn btn-primary" id="btn-add-student" style="display: none; margin-left: auto;">
+                  <span class="material-symbols-outlined">person_add</span> Add New Student
+                </button>
+              </div>
+            </div>
+
+            <div class="table-card mt-2">
+              <table class="data-table" id="students-table">
+                <thead>
+                  <tr>
+                    <th>Admission No</th>
+                    <th>Roll No</th>
+                    <th>Name</th>
+                    <th>Parent Name</th>
+                    <th>Class</th>
+                    <th>Bus Stop</th>
+                    <th>Phone</th>
+                    <th>Pending Fee</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- 4. CLASSES VIEW -->
+          <section id="page-classes" class="page-view">
+            <div class="action-header">
+              <h2>Setup Class Fees Structure</h2>
+              <button class="btn btn-primary" id="btn-add-class">
+                <span class="material-symbols-outlined">add</span> Create Class
+              </button>
+            </div>
+
+            <div class="table-card mt-2">
+              <table class="data-table" id="classes-table">
+                <thead>
+                  <tr>
+                    <th>Class Name</th>
+                    <th>Section</th>
+                    <th>Tuition Fee</th>
+                    <th>Admission Fee</th>
+                    <th>Other Fees</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- 5. BUS VIEW -->
+          <section id="page-bus" class="page-view">
+            <div class="action-header">
+              <h2>Transport Stops & Charges</h2>
+              <button class="btn btn-primary" id="btn-add-bus-stop">
+                <span class="material-symbols-outlined">add_location</span> Add Bus Stop
+              </button>
+            </div>
+
+            <div class="table-card mt-2">
+              <table class="data-table" id="bus-stops-table">
+                <thead>
+                  <tr>
+                    <th>Stop Name</th>
+                    <th>Monthly Charge</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- 6. ACADEMIC YEARS VIEW -->
+          <section id="page-academic-years" class="page-view">
+            <div class="academic-years-layout">
+              <div class="ay-left-panel">
+                <h2>Manage Academic Years</h2>
+                <div class="table-card mt-2">
+                  <table class="data-table" id="academic-years-table">
+                    <thead>
+                      <tr>
+                        <th>Year Title</th>
+                        <th>Start Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+
+                <div class="panel-card mt-2">
+                  <h2>Create New Academic Year</h2>
+                  <p class="text-muted text-sm mb-1">Creating a new year automatically makes it the <strong>active year</strong>. The previous year becomes archived.</p>
+                  <form id="create-ay-form" class="mt-1">
+                    <div class="input-group">
+                      <label>Academic Year Name (e.g., 2026-27)</label>
+                      <input type="text" id="ay-name" placeholder="2026-27" required>
+                    </div>
+                    <div class="input-group">
+                      <label>Start Date</label>
+                      <input type="date" id="ay-start-date" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create &amp; Activate Year</button>
+                  </form>
+                </div>
+
+                <div class="panel-card mt-2">
+                  <h2>Academic Billing Period</h2>
+                  <p class="text-muted text-sm mb-1">Set the tuition &amp; bus billing cycle for the active academic year.</p>
+                  <form id="configure-billing-months-form" class="mt-1">
+                    <div class="input-group-row">
+                      <div class="input-group">
+                        <label>Start Month</label>
+                        <select id="billing-start-month">
+                          <option value="1">January</option>
+                          <option value="2">February</option>
+                          <option value="3">March</option>
+                          <option value="4">April</option>
+                          <option value="5">May</option>
+                          <option value="6" selected>June</option>
+                          <option value="7">July</option>
+                          <option value="8">August</option>
+                          <option value="9">September</option>
+                          <option value="10">October</option>
+                          <option value="11">November</option>
+                          <option value="12">December</option>
+                        </select>
+                      </div>
+                      <div class="input-group">
+                        <label>End Month</label>
+                        <select id="billing-end-month">
+                          <option value="1">January</option>
+                          <option value="2">February</option>
+                          <option value="3" selected>March</option>
+                          <option value="4">April</option>
+                          <option value="5">May</option>
+                          <option value="6">June</option>
+                          <option value="7">July</option>
+                          <option value="8">August</option>
+                          <option value="9">September</option>
+                          <option value="10">October</option>
+                          <option value="11">November</option>
+                          <option value="12">December</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="input-group mt-1">
+                      <label>Billing Cycle Start Year</label>
+                      <input type="number" id="billing-start-year" value="2026" min="2020" max="2100" required>
+                    </div>
+                    <button type="submit" class="btn btn-secondary mt-1">Save Billing Period</button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- STUDENT PROMOTIONS CARD -->
+              <div class="ay-right-panel">
+                <div class="panel-card">
+                  <h2>Promote Students Workflow</h2>
+                  <p class="text-muted text-sm mb-2">Bulk promote students from a previous academic year to the active year.</p>
+                  <form id="promotion-form">
+                    <div class="input-group">
+                      <label>From Academic Year</label>
+                      <select id="promote-from-year" required></select>
+                    </div>
+                    <div class="input-group">
+                      <label>To Academic Year (Target)</label>
+                      <select id="promote-to-year" required></select>
+                    </div>
+
+                    <div class="promotion-class-mappings">
+                      <h3>Class Mappings</h3>
+                      <div id="promotion-mappings-list"></div>
+                      <button type="button" class="btn btn-outline btn-xs" id="btn-add-promotion-mapping">
+                        <span class="material-symbols-outlined">add</span> Add Class Mapping
+                      </button>
+                    </div>
+
+                    <div class="checkbox-group mt-2">
+                      <input type="checkbox" id="promote-carry-balance" checked>
+                      <label for="promote-carry-balance">Carry Forward Remaining Fee Balances</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-success btn-block mt-2" id="btn-run-promotion">
+                      <span class="material-symbols-outlined">stars</span> Run Promotion & Carry Balance
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 7. REPORTS VIEW -->
+          <section id="page-reports" class="page-view">
+            <div class="report-tabs mb-2">
+              <button class="tab-btn active" id="btn-tab-transactions">Transactions Log</button>
+              <button class="tab-btn" id="btn-tab-bus-report">Bus Collections Report</button>
+            </div>
+
+            <!-- TRANSACTIONS REPORT VIEW -->
+            <div id="report-view-transactions">
+              <div class="action-header">
+                <div class="report-filters">
+                  <div class="input-group">
+                    <label>From Date</label>
+                    <input type="date" id="report-from-date">
+                  </div>
+                  <div class="input-group">
+                    <label>To Date</label>
+                    <input type="date" id="report-to-date">
+                  </div>
+                  <button class="btn btn-primary" id="btn-load-report">Filter Report</button>
+                </div>
+                <div class="report-actions">
+                  <button class="btn btn-outline" id="btn-export-excel">
+                    <span class="material-symbols-outlined">table_view</span> Export Excel
+                  </button>
+                  <button class="btn btn-outline" id="btn-print-report">
+                    <span class="material-symbols-outlined">print</span> Print Report
+                  </button>
+                </div>
+              </div>
+
+              <div class="reports-dashboard-grid mt-2">
+                <div class="report-main-table">
+                  <h3>Transactions Log</h3>
+                  <div class="table-card mt-1">
+                    <table class="data-table" id="report-transactions-table">
+                      <thead>
+                        <tr>
+                          <th>Receipt No</th>
+                          <th>Student Name</th>
+                          <th>Class</th>
+                          <th>Amount Paid</th>
+                          <th>Payment Mode</th>
+                          <th>Date</th>
+                          <th class="no-print">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="report-sidebar">
+                  <div class="panel-card summary-panel">
+                    <h3>Total Collections</h3>
+                    <p class="summary-val" id="report-total-collection">₹0.00</p>
+                  </div>
+
+                  <div class="panel-card mt-2">
+                    <h3>Class Wise Summary</h3>
+                    <table class="data-table compact" id="report-classes-summary-table">
+                      <thead>
+                        <tr>
+                          <th>Class</th>
+                          <th>Students</th>
+                          <th>Total Bills</th>
+                          <th>Collected</th>
+                          <th>Pending</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BUS COLLECTIONS REPORT VIEW -->
+            <div id="report-view-bus" style="display: none;">
+              <div class="action-header">
+                <div class="report-filters">
+                  <div class="input-group">
+                    <label>Select Month</label>
+                    <select id="bus-report-month">
+                      <option value="1">January</option>
+                      <option value="2">February</option>
+                      <option value="3">March</option>
+                      <option value="4">April</option>
+                      <option value="5">May</option>
+                      <option value="6" selected>June</option>
+                      <option value="7">July</option>
+                      <option value="8">August</option>
+                      <option value="9">September</option>
+                      <option value="10">October</option>
+                      <option value="11">November</option>
+                      <option value="12">December</option>
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label>Select Year</label>
+                    <input type="number" id="bus-report-year" value="2026" min="2020" max="2100" style="width: 100px;">
+                  </div>
+                  <button class="btn btn-primary" id="btn-load-bus-report">Filter Report</button>
+                </div>
+                <div class="report-actions">
+                  <button class="btn btn-outline" id="btn-export-bus-excel">
+                    <span class="material-symbols-outlined">table_view</span> Export Excel
+                  </button>
+                </div>
+              </div>
+
+              <div class="reports-dashboard-grid mt-2">
+                <div class="report-main-table">
+                  <h3>Bus Collections Log</h3>
+                  <div class="table-card mt-1">
+                    <table class="data-table" id="report-bus-table">
+                      <thead>
+                        <tr>
+                          <th>Student Name</th>
+                          <th>Class</th>
+                          <th>Bus Stop</th>
+                          <th>Monthly Charge</th>
+                          <th>Amount Paid</th>
+                          <th>Balance</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="report-sidebar">
+                  <div class="panel-card summary-panel">
+                    <h3>Total Bus Collected</h3>
+                    <p class="summary-val" id="report-total-bus-collection">₹0.00</p>
+                  </div>
+                  <div class="panel-card mt-2">
+                    <h3>Total Outstanding</h3>
+                    <p class="summary-val text-danger" id="report-total-bus-outstanding" style="font-size: 24px;">₹0.00</p>
+                  </div>
+                  <div class="panel-card mt-2">
+                    <h3>Total Bus Riders</h3>
+                    <p class="summary-val text-success" id="report-total-bus-riders" style="font-size: 24px;">0</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 8. SYNC QUEUE VIEW -->
+          <section id="page-sync-queue" class="page-view">
+            <div class="action-header">
+              <h2>Cloud Synchronization Logs</h2>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline" id="btn-retry-failed-sync">
+                  <span class="material-symbols-outlined">refresh</span>
+                  Retry Failed
+                </button>
+                <button class="btn btn-outline" id="btn-clear-sync-logs">
+                  <span class="material-symbols-outlined">delete_sweep</span>
+                  Clear Success
+                </button>
+              </div>
+            </div>
+
+            <div class="table-card mt-2">
+              <table class="data-table" id="sync-queue-table">
+                <thead>
+                  <tr>
+                    <th>Item ID</th>
+                    <th>Student UUID</th>
+                    <th>Retry #</th>
+                    <th>Last Attempt</th>
+                    <th>Status</th>
+                    <th>Error Detail</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+
+
+          <!-- 9. SETTINGS VIEW -->
+          <section id="page-settings" class="page-view">
+            <div class="settings-designer-layout">
+              
+              <!-- LEFT COLUMN: CONTROLS -->
+              <div class="designer-controls-column">
+                
+                <!-- SECTION 1: School Profile & Headers -->
+                <div class="panel-card">
+                  <h2>School Profile & Receipt Headers</h2>
+                  <form id="settings-school-form" class="mt-1">
+                    <div class="input-group">
+                      <label>School Name</label>
+                      <input type="text" id="settings-school-name" required>
+                    </div>
+                    <div class="input-group-row">
+                      <div class="input-group">
+                        <label>Logo Path (Local Image Link)</label>
+                        <input type="text" id="settings-logo-path" placeholder="/path/to/logo.png">
+                      </div>
+                      <div class="input-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="settings-phone">
+                      </div>
+                    </div>
+                    <div class="input-group">
+                      <label>Address</label>
+                      <input type="text" id="settings-address">
+                    </div>
+                    <div class="input-group">
+                      <label>Receipt Footer Disclaimer</label>
+                      <textarea id="settings-receipt-footer" rows="2" placeholder="Thank you for your payment. Please keep this receipt safe."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Profile Info</button>
+                  </form>
+                </div>
+
+                <!-- SECTION 2: Receipt Style Designer -->
+                <div class="panel-card">
+                  <h2>A4 Receipt Layout Designer</h2>
+                  <div class="designer-form mt-1">
+                    
+                    <div class="input-group-row">
+                      <div class="input-group">
+                        <label>Paper Layout Size</label>
+                        <select id="designer-a4-size">
+                          <option value="full">Full A4 Page (1/1 A4)</option>
+                          <option value="half">Half A4 Page (1/2 A4 / A5)</option>
+                          <option value="quarter">Quarter A4 Page (1/4 A4 / A6)</option>
+                        </select>
+                      </div>
+                      <div class="input-group">
+                        <label>Print Position on A4</label>
+                        <select id="designer-a4-placement">
+                          <option value="top-left">Top-Left Corner / Top Half</option>
+                          <option value="top-right">Top-Right Corner</option>
+                          <option value="bottom-left">Bottom-Left Corner / Bottom Half</option>
+                          <option value="bottom-right">Bottom-Right Corner</option>
+                        </select>
+                      </div>
+                      <div class="input-group">
+                        <label>Color Palette Theme</label>
+                        <select id="designer-color-theme">
+                          <option value="blue">Modern Cobalt (Blue)</option>
+                          <option value="green">Premium Emerald (Green)</option>
+                          <option value="purple">Elegant Royal (Purple)</option>
+                          <option value="gray">Classic Slate (Grayscale)</option>
+                          <option value="monochrome">Monochrome (High Contrast B&W)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="input-group-row">
+                      <div class="input-group">
+                        <label>Receipt Title Heading</label>
+                        <input type="text" id="designer-title" value="FEE RECEIPT">
+                      </div>
+                      <div class="input-group">
+                        <label>Header Text Alignment</label>
+                        <select id="designer-header-align">
+                          <option value="left-right">Logo Left, Info Right</option>
+                          <option value="right-left">Logo Right, Info Left</option>
+                          <option value="center">Centered Stacked</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="input-group-row">
+                      <div class="input-group">
+                        <label>Border Styling</label>
+                        <select id="designer-border-style">
+                          <option value="solid">Single Thin Solid</option>
+                          <option value="dashed">Dashed Outline</option>
+                          <option value="double">Double Border Elegant</option>
+                          <option value="none">No Outer Border</option>
+                        </select>
+                      </div>
+                      <div class="input-group">
+                        <label>Typography Font</label>
+                        <select id="designer-font-family">
+                          <option value="inter">Inter (Clean Modern)</option>
+                          <option value="outfit">Outfit (Geometric Soft)</option>
+                          <option value="monospace">Courier (Classic Monospace)</option>
+                          <option value="sans-serif">Standard Sans-Serif</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="designer-checkboxes-grid">
+                      <div class="checkbox-group">
+                        <input type="checkbox" id="designer-show-logo" checked>
+                        <label for="designer-show-logo">Show Logo</label>
+                      </div>
+                      <div class="checkbox-group">
+                        <input type="checkbox" id="designer-show-signatures" checked>
+                        <label for="designer-show-signatures">Show Signatures</label>
+                      </div>
+                      <div class="checkbox-group">
+                        <input type="checkbox" id="designer-show-parent" checked>
+                        <label for="designer-show-parent">Show Parent Name</label>
+                      </div>
+                      <div class="checkbox-group">
+                        <input type="checkbox" id="designer-show-phone" checked>
+                        <label for="designer-show-phone">Show Student Phone</label>
+                      </div>
+                    </div>
+
+                    <button id="btn-save-design" class="btn btn-success btn-block mt-1">
+                      <span class="material-symbols-outlined">palette</span> Save Receipt Style
+                    </button>
+                  </div>
+                </div>
+
+                <!-- SECTION 3: System Print Preferences & Backup -->
+                <div class="panel-card">
+                  <h2>System & Backup Preferences</h2>
+                  <div class="settings-form mt-1">
+                    <div class="input-group">
+                      <label>Receipt Printing Layout Mode</label>
+                      <select id="settings-receipt-type">
+                        <option value="a4">Professional A4 Paper (PDF style)</option>
+                        <option value="thermal">80mm Thermal Receipt (POS style)</option>
+                      </select>
+                    </div>
+                    <div class="input-group">
+                      <label>Target Thermal Printer Name</label>
+                      <input type="text" id="settings-printer-name" placeholder="POS-80 or System Default">
+                    </div>
+                    <div class="input-group">
+                      <label>Monthly Bus Fee Mode</label>
+                      <select id="settings-bus-fee-mode">
+                        <option value="ask">Ask Accountant Confirmation Every Month</option>
+                        <option value="auto">Automatically Charge Every Month</option>
+                      </select>
+                    </div>
+                    
+                    <h3 class="mt-2" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Database Control Actions</h3>
+                    <div class="backup-actions mt-1">
+                      <button class="btn btn-outline btn-block" id="btn-backup-sqlite">
+                        <span class="material-symbols-outlined">backup</span> Backup SQLite Database
+                      </button>
+                      <button class="btn btn-outline btn-block mt-1" id="btn-restore-sqlite">
+                        <span class="material-symbols-outlined">restore</span> Restore SQLite Database
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- RIGHT COLUMN: LIVE PREVIEW -->
+              <div class="designer-preview-column">
+                <div class="preview-header">
+                  <h3>Interactive Design Preview</h3>
+                  <span id="preview-size-badge" class="badge">1/1 A4 Size</span>
+                </div>
+                <div class="preview-viewport">
+                  <div class="preview-scale-wrapper">
+                    <div id="preview-a4-page" class="preview-a4-page">
+                      <!-- THE LIVE PREVIEW CONTAINER -->
+                      <div id="design-preview-receipt" class="receipt-layout-a4-sheet size-full theme-blue border-solid font-inter align-left-right">
+                        <div class="receipt-header-row">
+                          <div class="header-logo-container" id="prev-logo-container">
+                          </div>
+                          <div class="header-text-container">
+                          <h1 id="prev-school-name">MSS Public School</h1>
+                          <p id="prev-school-address">123 Academy Road, New Delhi, India</p>
+                          <p id="prev-school-phone">Phone: +91 9988776655</p>
+                        </div>
+                      </div>
+
+                      <div class="receipt-title-box">
+                        <h2 id="prev-title">FEE RECEIPT</h2>
+                        <div class="academic-year-tag">Academic Year: 2026-2027</div>
+                      </div>
+
+                      <div class="receipt-info-grid">
+                        <div>
+                          <p><span>Receipt No:</span> <strong>RCP-2026-00045</strong></p>
+                          <p><span>Date:</span> <strong>2026-07-07</strong></p>
+                          <p><span>Payment Mode:</span> <strong>CASH</strong></p>
+                        </div>
+                        <div>
+                          <p><span>Student Name:</span> <strong>Aditya Kumar</strong></p>
+                          <p id="prev-row-parent"><span>Parent Name:</span> <strong>Rajesh Kumar</strong></p>
+                          <p><span>Class:</span> <strong>Class VI - Section A</strong></p>
+                          <p id="prev-row-phone"><span>Phone:</span> <strong>+91 9876543210</strong></p>
+                        </div>
+                      </div>
+
+                      <table class="receipt-table">
+                        <thead>
+                          <tr>
+                            <th>Fee Head Details</th>
+                            <th class="text-right">Amount (₹)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>Tuition Fee (Q1)</td><td class="text-right">₹15,000.00</td></tr>
+                          <tr><td>Computer Lab Fee</td><td class="text-right">₹1,200.00</td></tr>
+                          <tr><td>Sports Tournament Fee</td><td class="text-right">₹800.00</td></tr>
+                        </tbody>
+                      </table>
+
+                      <div class="receipt-summary-flex">
+                        <div class="summary-disclaimers">
+                          <p id="prev-footer-text">This is a system generated fee payment confirmation receipt. Verification signatures required for official audit.</p>
+                        </div>
+                        <div class="summary-numbers-box">
+                          <div class="summary-num-row"><span>Total Net Fee:</span> <strong>₹17,000.00</strong></div>
+                          <div class="summary-num-row"><span>Amount Paid:</span> <strong>₹15,000.00</strong></div>
+                          <div class="summary-num-row total-highlight"><span>Pending Balance:</span> <strong>₹2,000.00</strong></div>
+                        </div>
+                      </div>
+
+                      <div class="receipt-signatures-row" id="prev-sig-row">
+                        <div class="sig-col">
+                          <div class="sig-line"></div>
+                          <p>Parent / Guardian Signature</p>
+                        </div>
+                        <div class="sig-col">
+                          <div class="sig-line"></div>
+                          <p>Authorized Accountant</p>
+                        </div>
+                      </div>
+
+                    </div> <!-- End design preview receipt -->
+                  </div> <!-- End preview-a4-page -->
+
+                </div>
+              </div>
+            </div>
+
+            </div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- 1. STUDENT MODAL -->
+  <div class="modal" id="modal-student" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-student-title">Add New Student</h2>
+        <span class="material-symbols-outlined btn-close-modal" onclick="app.closeModal('modal-student')">close</span>
+      </div>
+      <form id="student-form">
+        <input type="hidden" id="student-db-id">
+        <div class="input-group">
+          <label>Student Name</label>
+          <input type="text" id="student-name" required>
+        </div>
+        <div class="input-group-row">
+          <div class="input-group">
+            <label>Admission Number</label>
+            <input type="text" id="student-admission" required>
+          </div>
+          <div class="input-group">
+            <label>Roll Number</label>
+            <input type="text" id="student-roll">
+          </div>
+        </div>
+        <div class="input-group-row">
+          <div class="input-group">
+            <label>Parent Name</label>
+            <input type="text" id="student-parent">
+          </div>
+          <div class="input-group">
+            <label>Phone Number</label>
+            <input type="text" id="student-phone">
+          </div>
+        </div>
+        <div class="input-group-row">
+          <div class="input-group">
+            <label>Class Assignment</label>
+            <select id="student-class" required></select>
+          </div>
+          <div class="input-group">
+            <label>Transport Bus Stop</label>
+            <select id="student-bus-stop"></select>
+          </div>
+        </div>
+        <div class="input-group" id="student-status-wrapper" style="display: none;">
+          <label>Status</label>
+          <select id="student-status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="transferred">Transferred</option>
+          </select>
+        </div>
+        <div class="modal-footer mt-2">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-student')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. CLASS MODAL -->
+  <div class="modal" id="modal-class" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-class-title">Create Class</h2>
+        <span class="material-symbols-outlined btn-close-modal" onclick="app.closeModal('modal-class')">close</span>
+      </div>
+      <form id="class-form">
+        <input type="hidden" id="class-db-id">
+        <div class="input-group-row">
+          <div class="input-group">
+            <label>Class Name (e.g. Class 1)</label>
+            <input type="text" id="class-name" placeholder="Class 1" required>
+          </div>
+          <div class="input-group">
+            <label>Section (e.g. A)</label>
+            <input type="text" id="class-section" placeholder="A">
+          </div>
+        </div>
+
+        <h3 class="mt-1">Standard Fees</h3>
+        <p class="text-muted text-sm mb-1">Set the monthly tuition and one-time fees for this class. Bus fees are managed per student in the Transport section.</p>
+        <div class="fee-form-row">
+          <div class="input-group">
+            <label>Tuition Fee (₹) <small class="text-muted">(monthly)</small></label>
+            <input type="number" id="class-tuition" value="0" min="0" step="0.01">
+          </div>
+          <div class="input-group">
+            <label>Admission Fee (₹)</label>
+            <input type="number" id="class-admission" value="0" min="0" step="0.01">
+          </div>
+          <div class="input-group">
+            <label>Book Fee (₹)</label>
+            <input type="number" id="class-book" value="0" min="0" step="0.01">
+          </div>
+        </div>
+
+        <div class="fee-form-row">
+          <div class="input-group">
+            <label>Uniform Fee (₹)</label>
+            <input type="number" id="class-uniform" value="0" min="0" step="0.01">
+          </div>
+        </div>
+
+        <h3 class="mt-1">Class Custom / Extra Fee Components</h3>
+        <div id="class-custom-fees-list"></div>
+        <button type="button" class="btn btn-outline btn-xs" id="btn-add-class-custom-fee">
+          <span class="material-symbols-outlined">add</span> Add Custom Class Fee Component
+        </button>
+
+        <div class="modal-footer mt-2">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-class')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Class Structure</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. BUS STOP MODAL -->
+  <div class="modal" id="modal-bus-stop" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-bus-stop-title">Add Bus Stop</h2>
+        <span class="material-symbols-outlined btn-close-modal" onclick="app.closeModal('modal-bus-stop')">close</span>
+      </div>
+      <form id="bus-stop-form">
+        <input type="hidden" id="bus-stop-db-id">
+        <div class="input-group">
+          <label>Stop Name</label>
+          <input type="text" id="bus-stop-name" required placeholder="e.g. Sector 5 Crossing">
+        </div>
+        <div class="input-group">
+          <label>Monthly Transport Charge (₹)</label>
+          <input type="number" id="bus-stop-charge" required value="0" min="0" step="0.01">
+        </div>
+        <div class="modal-footer mt-2">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-bus-stop')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Stop</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. RECEIPT PRINT MODAL -->
+  <div class="modal print-modal" id="modal-receipt-print" style="display: none;">
+    <div class="modal-content print-modal-content">
+      <div class="modal-header no-print">
+        <h2>Receipt Viewer</h2>
+        <div class="receipt-actions">
+          <button class="btn btn-primary" onclick="window.print()">
+            <span class="material-symbols-outlined">print</span> Print Receipt
+          </button>
+          <button class="btn btn-outline btn-close-modal" onclick="app.closeModal('modal-receipt-print')">Close</button>
+        </div>
+      </div>
+      
+      <!-- RECEIPT BODY (A4 OR THERMAL) -->
+      <div class="receipt-frame-container">
+        <!-- A4 Invoice Style -->
+        <div id="receipt-print-page" class="receipt-print-page">
+          <div id="receipt-layout-a4" class="receipt-layout-a4-sheet">
+            <div class="receipt-header-row">
+              <div class="header-logo-container">
+                <img id="receipt-a4-logo" src="" alt="School Logo" style="display:none; max-height:80px;">
+                <span class="material-symbols-outlined logo-fallback" id="receipt-a4-logo-fallback" style="font-size: 60px;">account_balance</span>
+              </div>
+              <div class="header-text-container">
+                <h1 id="receipt-a4-school-name">-</h1>
+                <p id="receipt-a4-school-address">-</p>
+                <p id="receipt-a4-school-phone">-</p>
+              </div>
+            </div>
+
+            <div class="receipt-title-box">
+              <h2 id="receipt-a4-title">FEE RECEIPT</h2>
+              <div class="academic-year-tag" id="receipt-a4-academic-year">-</div>
+            </div>
+
+            <div class="receipt-info-grid">
+              <div>
+                <p><span>Receipt No:</span> <strong id="receipt-a4-no">-</strong></p>
+                <p><span>Date:</span> <strong id="receipt-a4-date">-</strong></p>
+                <p><span>Payment Mode:</span> <strong id="receipt-a4-mode">-</strong></p>
+              </div>
+              <div>
+                <p><span>Student Name:</span> <strong id="receipt-a4-student-name">-</strong></p>
+                <p id="receipt-a4-row-parent"><span>Parent Name:</span> <strong id="receipt-a4-parent-name">-</strong></p>
+                <p><span>Class:</span> <strong id="receipt-a4-class">-</strong></p>
+                <p id="receipt-a4-row-phone"><span>Phone:</span> <strong id="receipt-a4-student-phone">-</strong></p>
+              </div>
+            </div>
+
+            <table class="receipt-table">
+              <thead>
+                <tr>
+                  <th>Fee Head Details</th>
+                  <th class="text-right">Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="receipt-a4-items"></tbody>
+            </table>
+
+            <div class="receipt-summary-flex">
+              <div class="summary-disclaimers">
+                <p id="receipt-a4-footer-text">-</p>
+              </div>
+              <div class="summary-numbers-box">
+                <div class="summary-num-row"><span>Total Net Fee:</span> <strong id="receipt-a4-total">₹0.00</strong></div>
+                <div class="summary-num-row"><span>Amount Paid:</span> <strong id="receipt-a4-paid">₹0.00</strong></div>
+                <div class="summary-num-row total-highlight"><span>Pending Balance:</span> <strong id="receipt-a4-balance">₹0.00</strong></div>
+              </div>
+            </div>
+
+            <div class="receipt-signatures-row" id="receipt-a4-sig-row">
+              <div class="sig-col">
+                <div class="sig-line"></div>
+                <p>Parent / Guardian Signature</p>
+              </div>
+              <div class="sig-col">
+                <div class="sig-line"></div>
+                <p>Accountant Signature</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 80mm Thermal Receipt POS Style -->
+        <div id="receipt-layout-thermal" class="receipt-layout-thermal-sheet" style="display:none;">
+          <div class="thermal-header">
+            <h2 id="receipt-t-school-name">-</h2>
+            <p id="receipt-t-school-address">-</p>
+            <p id="receipt-t-school-phone">-</p>
+            <p>--------------------------------</p>
+            <h3>FEE RECEIPT</h3>
+            <p id="receipt-t-academic-year">-</p>
+            <p>--------------------------------</p>
+          </div>
+          
+          <div class="thermal-meta">
+            <p>Receipt: <strong id="receipt-t-no">-</strong></p>
+            <p>Date: <span id="receipt-t-date">-</span></p>
+            <p>Student: <span id="receipt-t-student-name">-</span></p>
+            <p>Adm No: <span id="receipt-t-admission-no">-</span></p>
+            <p>Class: <span id="receipt-t-class">-</span></p>
+            <p>Payment: <span id="receipt-t-mode">-</span></p>
+          </div>
+          <p>--------------------------------</p>
+          
+          <table class="thermal-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="text-right">Amt</th>
+              </tr>
+            </thead>
+            <tbody id="receipt-t-items"></tbody>
+          </table>
+          <p>--------------------------------</p>
+          
+          <div class="thermal-totals">
+            <div class="t-row"><span>Net Fee:</span> <span id="receipt-t-total">₹0.00</span></div>
+            <div class="t-row"><span>Paid:</span> <span id="receipt-t-paid">₹0.00</span></div>
+            <div class="t-row highlight"><span>Balance:</span> <span id="receipt-t-balance">₹0.00</span></div>
+          </div>
+          <p>--------------------------------</p>
+          
+          <div class="thermal-footer">
+            <p id="receipt-t-footer-text">-</p>
+            <p class="thank-you">Thank You</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNDO PAYMENT CONFIRMATION MODAL -->
+  <div id="modal-confirm-undo" class="modal" style="display: none;">
+    <div class="modal-content confirm-modal-content">
+      <div class="confirm-modal-icon danger">
+        <span class="material-symbols-outlined">warning</span>
+      </div>
+      <h2 class="confirm-modal-title">Undo Payment?</h2>
+      <p class="confirm-modal-subtitle" id="confirm-undo-subtitle">
+        This action will permanently delete the payment record and restore the pending balance on the student's bill.
+      </p>
+      <div class="confirm-undo-details" id="confirm-undo-details">
+        <div class="confirm-detail-row">
+          <span class="material-symbols-outlined">receipt</span>
+          <span>Receipt: <strong id="confirm-undo-receipt">-</strong></span>
+        </div>
+        <div class="confirm-detail-row">
+          <span class="material-symbols-outlined">currency_rupee</span>
+          <span>Amount: <strong id="confirm-undo-amount">-</strong></span>
+        </div>
+      </div>
+      <p class="confirm-modal-warning">
+        <span class="material-symbols-outlined">info</span>
+        This action cannot be undone.
+      </p>
+      <div class="confirm-modal-actions">
+        <button class="btn btn-outline" id="btn-confirm-undo-cancel">Cancel</button>
+        <button class="btn btn-danger" id="btn-confirm-undo-proceed">
+          <span class="material-symbols-outlined">undo</span>
+          Yes, Undo Payment
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
